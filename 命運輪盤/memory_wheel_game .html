@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>同學會回憶命運輪盤</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #4a5568;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #718096;
+            margin-bottom: 30px;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 30px auto;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #2d3748;
+            position: relative;
+            transition: transform 4s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        }
+
+        .wheel-section {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .wheel-section span {
+            transform: rotate(-7.5deg);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            color: white;
+            z-index: 5;
+        }
+
+        .wheel-section .icon {
+            font-size: 1.5em;
+            margin-bottom: 2px;
+        }
+
+        .wheel-section .text {
+            font-size: 0.7em;
+            line-height: 1.1;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid #e53e3e;
+            z-index: 100;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #4299e1, #3182ce);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            color: white;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .player-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .player-card {
+            background: linear-gradient(145deg, #4299e1, #3182ce);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translate(-50%, -60%); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
+        .memory-card {
+            background: linear-gradient(145deg, #ffeaa7, #fdcb6e);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+        }
+
+        .score-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 10px 0;
+        }
+
+        .spin-result {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 15px 0;
+            padding: 15px;
+            background: linear-gradient(145deg, #90cdf4, #63b3ed);
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .title { font-size: 2em; }
+            .wheel-container { 
+                width: 300px; 
+                height: 300px; 
+            }
+            .wheel-section {
+                font-size: 0.6em;
+            }
+            .wheel-section .icon {
+                font-size: 1.2em;
+            }
+        }
+
+        /* 輪盤區塊顏色 */
+        .section-0 { background: linear-gradient(to bottom right, #ff6b6b, #ee5a24); }
+        .section-1 { background: linear-gradient(to bottom right, #4ecdc4, #44a08d); }
+        .section-2 { background: linear-gradient(to bottom right, #45b7d1, #4b79a1); }
+        .section-3 { background: linear-gradient(to bottom right, #f9ca24, #f0932b); }
+        .section-4 { background: linear-gradient(to bottom right, #eb4d4b, #c0392b); }
+        .section-5 { background: linear-gradient(to bottom right, #6c5ce7, #5f3dc4); }
+        .section-6 { background: linear-gradient(to bottom right, #a29bfe, #6c5ce7); }
+        .section-7 { background: linear-gradient(to bottom right, #fd79a8, #e84393); }
+        .section-8 { background: linear-gradient(to bottom right, #00b894, #00a085); }
+        .section-9 { background: linear-gradient(to bottom right, #0984e3, #0652dd); }
+        .section-10 { background: linear-gradient(to bottom right, #e17055, #d63031); }
+        .section-11 { background: linear-gradient(to bottom right, #00cec9, #00b894); }
+        .section-12 { background: linear-gradient(to bottom right, #fdcb6e, #e17055); }
+        .section-13 { background: linear-gradient(to bottom right, #6c5ce7, #a29bfe); }
+        .section-14 { background: linear-gradient(to bottom right, #fd79a8, #fdcb6e); }
+        .section-15 { background: linear-gradient(to bottom right, #00b894, #00cec9); }
+        .section-16 { background: linear-gradient(to bottom right, #0984e3, #74b9ff); }
+        .section-17 { background: linear-gradient(to bottom right, #e84393, #fd79a8); }
+        .section-18 { background: linear-gradient(to bottom right, #00a085, #00b894); }
+        .section-19 { background: linear-gradient(to bottom right, #5f3dc4, #6c5ce7); }
+        .section-20 { background: linear-gradient(to bottom right, #c0392b, #e74c3c); }
+        .section-21 { background: linear-gradient(to bottom right, #f39c12, #e67e22); }
+        .section-22 { background: linear-gradient(to bottom right, #27ae60, #2ecc71); }
+        .section-23 { background: linear-gradient(to bottom right, #8e44ad, #9b59b6); }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="game-container">
+        <h1 class="title">🎡 722同學會回憶命運輪盤 🎡</h1>
+        <p class="subtitle">轉動輪盤，重溫大學青春歲月！</p>
+        
+        <div class="player-info">
+            <div class="player-card">
+                <div>當前玩家：<span id="currentPlayer">玩家1</span></div>
+                <div class="score-display">分數：<span id="currentScore">0</span></div>
+            </div>
+            <div class="player-card">
+                <div>已收集回憶</div>
+                <div class="score-display"><span id="completedMemories">0</span> / 24</div>
+            </div>
+        </div>
+
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel">
+                <div class="center-circle">🎯</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="spinBtn" onclick="spinWheel()">🎡 轉動輪盤</button>
+            <button class="btn btn-secondary" onclick="resetGame()">🔄 重新開始</button>
+            <button class="btn btn-secondary" onclick="showInstructions()">❓ 遊戲說明</button>
+        </div>
+
+        <div id="spinResult" class="spin-result" style="display: none;"></div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 15px; backdrop-filter: blur(5px);">
+            <p style="color: #4a5568; font-size: 1.1em; font-weight: bold; margin: 0;">
+                💝 Our good old 722ers 同學會製作 💝
+            </p>
+        </div>
+    </div>
+
+    <!-- 模態框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div id="modalContent"></div>
+            <button class="btn btn-primary" onclick="closeModal()" style="margin-top: 20px;">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        const memories = [
+            { icon: "🏢", text: "杏春樓", question: "在杏春樓熬夜讀書或上課的回憶", type: "share" },
+            { icon: "👩‍🏫", text: "王正怡教授", question: "王正怡教授課堂上的經典語錄或難忘回憶", type: "story" },
+            { icon: "🍜", text: "學生餐廳", question: "最常吃的學生餐廳菜色是什麼？", type: "share" },
+            { icon: "🍧", text: "對面冰店", question: "學校對面冰店最愛點什麼？和誰一起去的？", type: "share" },
+            { icon: "📝", text: "共筆組", question: "一起做筆記、分享資料的團結回憶", type: "story" },
+            { icon: "🎭", text: "社團教室", question: "參加過什麼社團？有什麼難忘經歷？", type: "story" },
+            { icon: "💕", text: "那年追的女孩", question: "大學時期的暗戀或告白經歷", type: "funny" },
+            { icon: "🦷", text: "牙科實驗室", question: "在牙科實驗室熬夜做實驗的血淚史", type: "story" },
+            { icon: "📼", text: "翁教授錄音帶", question: "翁教授錄音帶教學的經典回憶", type: "funny" },
+            { icon: "🏠", text: "宿舍", question: "宿舍生活最難忘的事情", type: "story" },
+            { icon: "🔬", text: "組織學跑台", question: "組織學跑台考試的緊張刺激回憶", type: "funny" },
+            { icon: "📝", text: "期末考", question: "最緊張刺激的期末考經歷", type: "funny" },
+            { icon: "🥞", text: "解剖室蛋餅", question: "解剖課後吃蛋餅的療癒時光回憶", type: "story" },
+            { icon: "💝", text: "校園告白", question: "在校園裡發生的告白故事或浪漫回憶", type: "share" },
+            { icon: "🏃‍♀️", text: "翹課實錄", question: "最經典的翹課經歷或被抓包的糗事", type: "funny" },
+            { icon: "🎉", text: "寢室聯誼", question: "寢室聯誼的有趣回憶或搞笑事件", type: "share" },
+            { icon: "👨‍🔬", text: "實驗室楊先生", question: "實驗室楊先生的經典語錄或難忘互動", type: "story" },
+            { icon: "📷", text: "畢業典禮", question: "畢業典禮當天的心情和回憶", type: "story" },
+            { icon: "💌", text: "系學會", question: "參與系上活動的經歷", type: "share" },
+            { icon: "🚨", text: "舞會臨檢", question: "舞會或活動被臨檢時的緊張刺激回憶", type: "funny" },
+            { icon: "😴", text: "上課睡覺", question: "最容易睡著的課是哪一堂？", type: "funny" },
+            { icon: "💃", text: "迎新舞會", question: "迎新舞會的青澀回憶或有趣經歷", type: "story" },
+            { icon: "📋", text: "實習", question: "實習或打工的有趣經歷", type: "share" },
+            { icon: "✨", text: "畢業旅行", question: "畢業旅行去了哪裡？最難忘什麼？", type: "story" }
+        ];
+
+        let isSpinning = false;
+        let completedMemories = [];
+        let playerScore = 0;
+        let currentPlayer = "玩家1";
+
+        // 初始化星星背景
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // 初始化輪盤
+        function initializeWheel() {
+            const wheel = document.getElementById('wheel');
+            const anglePerSection = 360 / memories.length;
+            
+            memories.forEach((memory, index) => {
+                const section = document.createElement('div');
+                section.className = `wheel-section section-${index}`;
+                section.style.transform = `rotate(${index * anglePerSection}deg)`;
+                section.style.clipPath = `polygon(0 0, 50% 0, ${50 + 25 * Math.cos((anglePerSection * Math.PI) / 180)}% ${25 * Math.sin((anglePerSection * Math.PI) / 180)}%, 0 50%)`;
+                
+                section.innerHTML = `
+                    <span>
+                        <div class="icon">${memory.icon}</div>
+                        <div class="text">${memory.text}</div>
+                    </span>
+                `;
+                
+                wheel.appendChild(section);
+            });
+        }
+
+        // 音效控制 - 使用本地音檔
+        const sounds = {
+            click: null,
+            spin: null,
+            stop: null,
+            success: null
+        };
+        
+        // 追蹤當前播放的音效
+        let currentlyPlaying = [];
+        
+        let isAudioEnabled = false;
+        
+        // 停止所有音效
+        function stopAllSounds() {
+            currentlyPlaying.forEach(audio => {
+                if (audio && !audio.paused) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            });
+            currentlyPlaying = [];
+        }
+        
+        // 停止特定音效
+        function stopSound(soundName) {
+            const audio = sounds[soundName];
+            if (audio && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+                // 從正在播放列表中移除
+                const index = currentlyPlaying.indexOf(audio);
+                if (index > -1) {
+                    currentlyPlaying.splice(index, 1);
+                }
+            }
+        }
+        
+        // 初始化音檔
+        function initSounds() {
+            try {
+                sounds.click = new Audio('./sounds/click.mp3');
+                sounds.spin = new Audio('./sounds/spin.mp3');
+                sounds.stop = new Audio('./sounds/stop.mp3');
+                sounds.success = new Audio('./sounds/success.mp3');
+                
+                // 設定音量
+                Object.values(sounds).forEach(audio => {
+                    if (audio) {
+                        audio.volume = 0.6;
+                        audio.preload = 'auto';
+                        
+                        // 播放結束時從追蹤列表移除
+                        audio.addEventListener('ended', () => {
+                            const index = currentlyPlaying.indexOf(audio);
+                            if (index > -1) {
+                                currentlyPlaying.splice(index, 1);
+                            }
+                        });
+                        
+                        // 處理音檔載入錯誤
+                        audio.addEventListener('error', (e) => {
+                            console.log('音檔載入失敗:', audio.src);
+                        });
+                        
+                        // 音檔載入成功
+                        audio.addEventListener('canplaythrough', () => {
+                            console.log('音檔載入成功:', audio.src);
+                        });
+                    }
+                });
+                
+                isAudioEnabled = true;
+                console.log('✅ 音效系統已初始化');
+                
+                // 更新按鈕提示
+                const btn = document.getElementById('spinBtn');
+                if (btn) {
+                    btn.innerHTML = '🎡 轉動輪盤 (音效已就緒)';
+                    setTimeout(() => {
+                        btn.innerHTML = '🎡 轉動輪盤';
+                    }, 2000);
+                }
+                
+                // 隱藏音效提示
+                const tip = document.getElementById('audioTip');
+                if (tip) {
+                    tip.innerHTML = '🔊 音效已啟用';
+                    tip.style.background = 'linear-gradient(45deg, #00b894, #00a085)';
+                    setTimeout(() => {
+                        tip.style.cssText += 'opacity: 0; transition: opacity 1s;';
+                        setTimeout(() => tip.remove(), 1000);
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                console.error('音效初始化失敗:', error);
+                // 如果音檔載入失敗，回退到 Web Audio API
+                initWebAudioFallback();
+            }
+        }
+        
+        // Web Audio API 備用方案
+        function initWebAudioFallback() {
+            console.log('使用 Web Audio API 備用方案');
+            
+            let audioContext;
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Web Audio API 不支援');
+                return;
+            }
+            
+            function createBeep(frequency, duration, type = 'sine') {
+                if (!audioContext) return;
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+            
+            // 重新定義音效函數為 Web Audio 版本
+            window.playClickSound = () => {
+                if (audioContext?.state === 'suspended') audioContext.resume();
+                createBeep(800, 0.1, 'square');
+            };
+            
+            window.playSpinSound = () => {
+                if (audioContext?.state === 'suspended') audioContext.resume();
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => createBeep(200 + i * 15, 0.08, 'square'), i * 150);
+                }
+            };
+            
+            window.playStopSound = () => {
+                if (audioContext?.state === 'suspended') audioContext.resume();
+                createBeep(60, 0.3, 'triangle');
+                setTimeout(() => createBeep(120, 0.15, 'sine'), 200);
+            };
+            
+            window.playSuccessSound = () => {
+                if (audioContext?.state === 'suspended') audioContext.resume();
+                const notes = [261.63, 329.63, 392.00, 523.25];
+                notes.forEach((note, index) => {
+                    setTimeout(() => createBeep(note, 0.3, 'sine'), index * 150);
+                });
+            };
+            
+            isAudioEnabled = true;
+        }
+        
+        // 播放音效的通用函數
+        function playSound(soundName, stopPrevious = false) {
+            if (!isAudioEnabled) return;
+            
+            // 如果需要停止之前的音效
+            if (stopPrevious) {
+                stopAllSounds();
+            }
+            
+            const audio = sounds[soundName];
+            if (audio) {
+                // 停止同一個音效的之前播放
+                if (!audio.paused) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+                
+                // 播放音檔
+                const playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        // 加入正在播放的列表
+                        if (!currentlyPlaying.includes(audio)) {
+                            currentlyPlaying.push(audio);
+                        }
+                    }).catch(error => {
+                        console.log('音檔播放失敗:', error);
+                    });
+                }
+            }
+        }
+        
+        // 各種音效函數
+        function playClickSound() {
+            playSound('click');
+        }
+        
+        function playSpinSound() {
+            // 停止之前的轉輪音效，開始新的
+            stopSound('spin');
+            playSound('spin');
+        }
+        
+        function playStopSound() {
+            // 停止轉輪音效，播放停止音效
+            stopSound('spin');
+            playSound('stop');
+        }
+        
+        function playSuccessSound() {
+            playSound('success');
+        }
+
+        // 轉動輪盤
+        function spinWheel() {
+            if (isSpinning) return;
+            
+            // 首次點擊時初始化音效（如果尚未初始化）
+            if (!isAudioEnabled) {
+                initSounds();
+            }
+            
+            // 播放點擊音效
+            playClickSound();
+            
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('spinResult').style.display = 'none';
+            
+            // 播放轉輪音效
+            playSpinSound();
+            
+            // 隨機選擇一個結果
+            const randomIndex = Math.floor(Math.random() * memories.length);
+            const anglePerSection = 360 / memories.length;
+            const targetAngle = randomIndex * anglePerSection;
+            
+            // 計算旋轉角度（多轉幾圈增加效果）
+            const spins = 5 + Math.random() * 3; // 5-8圈
+            const finalAngle = (spins * 360) + (360 - targetAngle);
+            
+            const wheel = document.getElementById('wheel');
+            wheel.style.transform = `rotate(${finalAngle}deg)`;
+            
+            // 4秒後顯示結果
+            setTimeout(() => {
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+                playStopSound(); // 播放停止音效
+                showSpinResult(randomIndex);
+            }, 4000);
+        }
+
+        // 顯示旋轉結果
+        function showSpinResult(index) {
+            const memory = memories[index];
+            const resultDiv = document.getElementById('spinResult');
+            
+            resultDiv.innerHTML = `
+                <div style="font-size: 1.5em; margin-bottom: 10px;">
+                    ${memory.icon} 轉到了「${memory.text}」！
+                </div>
+                <div style="font-size: 1em; opacity: 0.9;">
+                    點擊下方按鈕開始分享回憶
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+            
+            // 自動打開記憶卡
+            setTimeout(() => openMemoryCard(index), 1500);
+        }
+
+        // 打開記憶卡
+        function openMemoryCard(index) {
+            const memory = memories[index];
+            let typeText = "";
+            let bgColor = "";
+            
+            switch(memory.type) {
+                case "share": typeText = "分享回憶"; bgColor = "#4299e1"; break;
+                case "story": typeText = "說故事時間"; bgColor = "#38a169"; break;
+                case "funny": typeText = "搞笑時刻"; bgColor = "#ed8936"; break;
+            }
+            
+            const content = `
+                <div class="memory-card" style="background: ${bgColor}; color: white;">
+                    <div style="font-size: 3em; margin-bottom: 10px;">${memory.icon}</div>
+                    <h3>${memory.text}</h3>
+                    <p style="margin: 15px 0; font-size: 1.2em;">${typeText}</p>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <p style="font-size: 1.1em; font-weight: bold;">${memory.question}</p>
+                    </div>
+                    <p style="font-size: 0.9em; opacity: 0.9;">現在輪到你分享啦！說完記得按關閉繼續遊戲 😊</p>
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('modal').style.display = 'block';
+            
+            // 標記為已完成
+            if (!completedMemories.includes(index)) {
+                completedMemories.push(index);
+                playerScore += 10;
+                playSuccessSound(); // 播放成功音效
+                updateDisplay();
+            }
+        }
+
+        // 更新顯示
+        function updateDisplay() {
+            document.getElementById('currentScore').textContent = playerScore;
+            document.getElementById('completedMemories').textContent = completedMemories.length;
+            
+            if (completedMemories.length === 24) {
+                setTimeout(() => {
+                    alert('🎉 恭喜！你完成了所有回憶收集！\n希望這些回憶讓大家更期待同學會！');
+                }, 500);
+            }
+        }
+
+        // 關閉模態框
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // 重置遊戲
+        function resetGame() {
+            if (confirm('確定要重新開始遊戲嗎？')) {
+                completedMemories = [];
+                playerScore = 0;
+                document.getElementById('spinResult').style.display = 'none';
+                document.getElementById('wheel').style.transform = 'rotate(0deg)';
+                updateDisplay();
+            }
+        }
+
+        // 顯示遊戲說明
+        function showInstructions() {
+            const instructions = `
+                <div style="text-align: left;">
+                    <h3 style="color: #4a5568; margin-bottom: 15px;">🎡 遊戲說明</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin: 10px 0; padding: 8px; background: #f7fafc; border-radius: 5px;">
+                            🎡 <strong>轉動輪盤：</strong>點擊「轉動輪盤」按鈕，等待輪盤停止
+                        </li>
+                        <li style="margin: 10px 0; padding: 8px; background: #f7fafc; border-radius: 5px;">
+                            💬 <strong>分享回憶：</strong>根據輪盤結果回答問題，分享學生時代的回憶
+                        </li>
+                        <li style="margin: 10px 0; padding: 8px; background: #f7fafc; border-radius: 5px;">
+                            ⭐ <strong>收集回憶：</strong>每完成一個記憶獲得10分
+                        </li>
+                        <li style="margin: 10px 0; padding: 8px; background: #f7fafc; border-radius: 5px;">
+                            🏆 <strong>遊戲目標：</strong>收集所有24個校園回憶
+                        </li>
+                    </ul>
+                    <div style="margin-top: 20px; padding: 15px; background: #e6fffa; border-radius: 10px;">
+                        <p style="color: #234e52; font-weight: bold;">💡 小提示</p>
+                        <p style="color: #234e52; margin: 5px 0;">這是722同學會專屬的回憶輪盤！每個區塊都代表著大學時光的珍貴回憶。大家可以輪流轉動輪盤，分享各自的校園故事，增進老同學之間的感情！</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = instructions;
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        // 點擊模態框外部關閉
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // 初始化遊戲
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            initializeWheel();
+            updateDisplay();
+            
+            // 添加音效載入提示
+            const audioTip = document.createElement('div');
+            audioTip.id = 'audioTip';
+            audioTip.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 20px;
+                font-size: 0.9em;
+                z-index: 1001;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: pulse 2s infinite;
+            `;
+            audioTip.innerHTML = '🎵 點擊任意按鈕載入音效';
+            document.body.appendChild(audioTip);
+        });
+    </script>
+</body>
+</html>
